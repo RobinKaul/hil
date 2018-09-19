@@ -27,7 +27,7 @@ def project_delete(project):
 def project_list():
     """List all projects"""
     q = client.project.list()
-    sys.stdout.write('%s Projects :    ' % len(q) + " ".join(q) + '\n')
+    sys.stdout.write('%s Projects :    ' % len(q) + " , ".join(q) + '\n')
 
 
 @project.command(name='list-networks')

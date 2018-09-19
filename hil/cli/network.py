@@ -2,7 +2,8 @@
 import click
 import sys
 from hil.cli.client_setup import client
-
+from prettytable import PrettyTable
+import json
 
 @click.group()
 def network():
@@ -34,19 +35,99 @@ def network_delete(network):
 
 @network.command(name='show')
 @click.argument('network')
-def network_show(network):
+@click.option('--json', is_flag=True)
+def network_show(network, json):
     """Display information about network"""
     q = client.network.show(network)
-    for item in q.items():
-        sys.stdout.write("%s\t  :  %s\n" % (item[0], item[1]))
+    if json:
+        print q
+        return
+    import pdb; pdb.set_trace()
+    x = PrettyTable()
+    x.field_names = ['Attribute', 'Info']
 
+    if 'owner' in q:
+	x.add_row(['owner', q['owner']])
+	x.add_row(['',''])
+    if 'name' in q:
+	x.add_row(['name', q['name']])
+	x.add_row(['',''])
+    if 'access' in q:
+	x.add_row(['access', q['access'][0]])
+	x.add_row(['',''])
+    if 'channels' in q:
+	x.add_row(['channels', q['channels'][0]])
+	for i in range(1, len(q['channels'])):
+	    x.add_row(['', q['channels'][i]])
+	x.add_row(['',''])
+    if 'connected-nodes' in q:
+	firstElement = 0
+	for subVal in q['connected-nodes'].iteritems():
+	    temp = []
+	    temp.append(subVal[0])
+	    temp.append(subVal[1][0])
+	    if firstElement == 0:
+		x.add_row(['connected-nodes', "->".join(temp)])
+		firstElement+= 1
+	    else:
+		x.add_row(['', "->".join(temp)])
+    print x
+'''else:
+            x.add_row([item, value])
+    print x
+'''
+'''
+@network.command(name='show')
+@click.argument('network')
+@click.option('--json', is_flag=True)
+def network_show(network, json):
+    """Display information about network"""
+    q = client.network.show(network)
+    if json:
+        print q
+        return
+    import pdb; pdb.set_trace()
+    x = PrettyTable()
+    x.field_names = ['Attribute', 'Info']
+    for item, value in q.iteritems():
+        if isinstance(value, list):
+            x.add_row([item, value[0]])
+	    for i in range(1, len(value)):
+                x.add_row(['', value[i]])
+
+	elif isinstance(value, dict):
+	    for subVal in value.iteritems():
+		temp = []
+		temp.append(subVal[0])
+		temp.append(subVal[1][0])
+		x.add_row([item, "->".join(temp)])
+	else:
+	    x.add_row([item, value])
+    print x
+'''
 
 @network.command(name='list')
-def network_list():
+@click.option('--json', is_flag=True)
+def network_list(json):
     """List all networks"""
     q = client.network.list()
-    for item in q.items():
-        sys.stdout.write('%s \t : %s\n' % (item[0], item[1]))
+    if json:
+        print q
+        return
+    count=0
+    x = PrettyTable()
+    x.field_names = ['network name','network id','project name']
+    for key1,value1 in q.iteritems():
+        for key2,value2 in value1.iteritems():
+            if count%2==0:
+                pid=value2
+            else:
+                pname=value2
+            count+=1
+        x.add_row([key1,pid,pname[0].encode("utf-8")])
+    print(x)     
+    
+
 
 
 @network.command('list-attachments')

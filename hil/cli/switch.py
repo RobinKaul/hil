@@ -3,7 +3,7 @@ import click
 import sys
 import ast
 from hil.cli.client_setup import client
-
+from prettytable import PrettyTable
 
 @click.group()
 def switch():
@@ -12,19 +12,36 @@ def switch():
 
 @switch.command(name='show')
 @click.argument('switch')
-def node_show(switch):
+def switch_show(switch):
     """Display information about <switch>"""
     q = client.switch.show(switch)
-    for item in q.items():
-        sys.stdout.write("%s\t  :  %s\n" % (item[0], item[1]))
+    x = PrettyTable()
+    x.field_names = ['Attribute', 'Information']    
+    for item, value in q.iteritems():
+	if isinstance(value, list):
+	    value = value[0]
+	if isinstance(item, unicode):
+            item  = item.encode("utf-8")
+	
+	if item == 'ports':		
+            #print(item.encode("utf-8"), value.encode("utf-8"))
+            #x.add_row(item.encode("utf-8"), value.encode("utf-8"))
+	    for portDictItem, portDictValue in value.iteritems():
+		x.add_row([item, ":".join([portDictItem.encode("utf-8"), portDictValue.encode("utf-8")])])
+	else:
+	    x.add_row([item, value.encode("utf-8")])
 
+    print(x)
 
 @switch.command(name='list')
 def list_switches():
     """List all switches"""
     q = client.switch.list()
-    sys.stdout.write('%s switches :    ' % len(q) + " ".join(q) + '\n')
-
+    x=PrettyTable(['switch list'])
+    for switch in q:
+        x.add_row([switch])
+    print(x)
+    
 
 @switch.command(name='register', short_help='Register a switch')
 @click.argument('switch')
