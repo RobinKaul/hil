@@ -83,23 +83,23 @@ def network_show(network, json):
         print q
         return
     import pdb; pdb.set_trace()
-    x = PrettyTable()
-    x.field_names = ['Attribute', 'Info']
+    net_table = PrettyTable()
+    net_table.field_names = ['Attribute', 'Info']
     for item, value in q.iteritems():
         if isinstance(value, list):
-            x.add_row([item, value[0]])
+            net_table.add_row([item, value[0]])
 	    for i in range(1, len(value)):
-                x.add_row(['', value[i]])
+                net_table.add_row(['', value[i]])
 
 	elif isinstance(value, dict):
 	    for subVal in value.iteritems():
 		temp = []
 		temp.append(subVal[0])
 		temp.append(subVal[1][0])
-		x.add_row([item, "->".join(temp)])
+		net_table.add_row([item, "->".join(temp)])
 	else:
-	    x.add_row([item, value])
-    print x
+	    net_table.add_row([item, value])
+    print net_table
 '''
 
 @network.command(name='list')
