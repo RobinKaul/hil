@@ -19,10 +19,10 @@ def nodes_list(pool, json):
     if json:
 	print q
 	return
-    x=PrettyTable(['node list'])
+    node_list =PrettyTable(['node list'])
     for node in q:
-        x.add_row([node])
-    print(x)
+        node_list.add_row([node])
+    print(node_list)
 
 
 @node.command(name='show')
@@ -119,7 +119,7 @@ def node_show(node, json):
                         for key2,value2 in value1.iteritems():
 			    nic_table.add_row([key1.encode("utf-8"), key2.encode("utf-8"),value2.encode("utf-8")])
                             #print([key1.encode("utf-8"),":".join([key2.encode("utf-8"),value2.encode("utf-8")])])
-			    #x.add_row([key1.encode("utf-8"),":".join([key2.encode("utf-8"),value2.encode("utf-8")])])
+			    #nic_table.add_row([key1.encode("utf-8"),":".join([key2.encode("utf-8"),value2.encode("utf-8")])])
                     else:
         		#print([key1.encode("utf-8"),value1.encode("utf-8")])
 	                nic_table.add_row([key1,value1, ''])
