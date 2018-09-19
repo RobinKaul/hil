@@ -42,24 +42,23 @@ def network_show(network, json):
     if json:
         print q
         return
-    import pdb; pdb.set_trace()
-    x = PrettyTable()
-    x.field_names = ['Attribute', 'Info']
+    net_table = PrettyTable()
+    net_table.field_names = ['Attribute', 'Info']
 
     if 'owner' in q:
-	x.add_row(['owner', q['owner']])
-	x.add_row(['',''])
+	net_table.add_row(['owner', q['owner']])
+	net_table.add_row(['',''])
     if 'name' in q:
-	x.add_row(['name', q['name']])
-	x.add_row(['',''])
+	net_table.add_row(['name', q['name']])
+	net_table.add_row(['',''])
     if 'access' in q:
-	x.add_row(['access', q['access'][0]])
-	x.add_row(['',''])
+	net_table.add_row(['access', q['access'][0]])
+	net_table.add_row(['',''])
     if 'channels' in q:
-	x.add_row(['channels', q['channels'][0]])
+	net_table.add_row(['channels', q['channels'][0]])
 	for i in range(1, len(q['channels'])):
-	    x.add_row(['', q['channels'][i]])
-	x.add_row(['',''])
+	    net_table.add_row(['', q['channels'][i]])
+	net_table.add_row(['',''])
     if 'connected-nodes' in q:
 	firstElement = 0
 	for subVal in q['connected-nodes'].iteritems():
@@ -67,15 +66,12 @@ def network_show(network, json):
 	    temp.append(subVal[0])
 	    temp.append(subVal[1][0])
 	    if firstElement == 0:
-		x.add_row(['connected-nodes', "->".join(temp)])
+		net_table.add_row(['connected-nodes', "->".join(temp)])
 		firstElement+= 1
 	    else:
-		x.add_row(['', "->".join(temp)])
-    print x
-'''else:
-            x.add_row([item, value])
-    print x
-'''
+		net_table.add_row(['', "->".join(temp)])
+    print net_table
+
 '''
 @network.command(name='show')
 @click.argument('network')
@@ -115,8 +111,8 @@ def network_list(json):
         print q
         return
     count=0
-    x = PrettyTable()
-    x.field_names = ['network name','network id','project name']
+    net_table = PrettyTable()
+    net_table.field_names = ['network name','network id','project name']
     for key1,value1 in q.iteritems():
         for key2,value2 in value1.iteritems():
             if count%2==0:
@@ -124,8 +120,8 @@ def network_list(json):
             else:
                 pname=value2
             count+=1
-        x.add_row([key1,pid,pname[0].encode("utf-8")])
-    print(x)     
+        net_table.add_row([key1,pid,pname[0].encode("utf-8")])
+    print net_table
     
 
 
