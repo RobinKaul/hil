@@ -16,7 +16,6 @@ def register_drivers():
     This must be run *after* extensions have been loaded.
     """
     build_class_map_for(model.Switch)
-    build_class_map_for(model.Obm)
 
 
 def validate_state():
@@ -48,8 +47,7 @@ def stop_orphan_consoles():
     # Stop all orphan console logging processes on startup
     nodes = model.Node.query.all()
     for node in nodes:
-        node.obm.stop_console()
-        node.obm.delete_console()
+        node.disable_obm()
 
 
 def init():
