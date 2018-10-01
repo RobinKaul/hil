@@ -25,7 +25,6 @@ def port_show(switch, port, jsonout):
         return
 
     port_table = PrettyTable()
-    port_table.title = 'PORT TABLE'
     port_table.field_names = ['ATTRIBUTE', 'INFORMATION']
 
     if 'node' in raw_output:
@@ -33,8 +32,7 @@ def port_show(switch, port, jsonout):
     if 'nic' in raw_output:
         port_table.add_row(['NIC', raw_output['nic']])
     if 'networks' in raw_output:
-        port_table.add_row(['Networks', raw_output['networks'].keys()[0]])
-        port_table.add_row(['', raw_output['networks'].values()[0]])
+        port_table.add_row(['Networks', raw_output['networks'].values()[0] + '(' + raw_output['networks'].keys()[0] + ')'])
 
     print(port_table)
 

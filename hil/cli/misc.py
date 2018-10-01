@@ -23,7 +23,6 @@ def show_networking_action(status_id, jsonout):
         return
 
     net_actions_table = PrettyTable()
-    net_actions_table.title = 'NETWORKING ACTIONS'
     net_actions_table.field_names = ['ATTRIBUTE', 'INFORMATION']
 
     if 'node' in raw_output:

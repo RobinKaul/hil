@@ -47,35 +47,31 @@ def network_show(network, jsonout):
         return
 
     net_table = PrettyTable()
-    net_table.title = 'NETWORK TABLE'
     net_table.field_names = ['ATTRIBUTE', 'INFORMATION']
 
     if 'owner' in raw_output:
         net_table.add_row(['Owner', raw_output['owner']])
-        net_table.add_row(['', ''])
     if 'name' in raw_output:
         net_table.add_row(['Name', raw_output['name']])
-        net_table.add_row(['', ''])
     if 'access' in raw_output:
         net_table.add_row(['Access', raw_output['access'][0]])
-        net_table.add_row(['', ''])
+        for i in range(1, len(raw_output['access'])):
+            net_table.add_row(['', raw_output['access'][i]])
     if 'channels' in raw_output:
         net_table.add_row(['Channels', raw_output['channels'][0]])
         for i in range(1, len(raw_output['channels'])):
             net_table.add_row(['', raw_output['channels'][i]])
-        net_table.add_row(['', ''])
     if 'connected-nodes' in raw_output:
         firstElement = 0
         for node, nic in raw_output['connected-nodes'].items():
             if firstElement == 0:
                 net_table.add_row(['Connected Nodes', node + "->" + nic[0]])
-                for i in range(1, len(nic)):
-                    net_table.add_row(['', node + "->" + nic[i]])
-                firstElement += 1
+                firstElement+= 1
             else:
                 net_table.add_row(['', node + "->" + nic[0]])
-                for i in range(1, len(nic)):
-                    net_table.add_row(['', node + "->" + nic[i]])
+
+            for i in range(1, len(nic)):
+                net_table.add_row(['', node + "->" + nic[i]])
 
     print(net_table)
 
@@ -91,18 +87,15 @@ def network_list(jsonout):
         print(json_output)
         return
 
-    count = 0
     net_table = PrettyTable()
-    net_table.title = 'NETWORK LIST'
-    net_table.field_names = ['Network Name', 'Network ID', 'Project Name']
-    for key1, value1 in raw_output.items():
-        for key2, value2 in value1.items():
-            if count % 2 == 0:
-                pid = value2
-            else:
-                pname = value2
-            count += 1
-        net_table.add_row([key1, pid, pname[0].encode("utf-8")])
+    net_table.field_names = ['NETWORK NAME', 'NETWORK ID', 'PROJECTS WITH ACCESS']
+    for net_name, value in raw_output.items():
+        if 'network_id' in value:
+            net_id = value['network_id']
+        if 'projects' in value:
+            net_table.add_row([net_name, net_id, value['projects'][0]])
+            for i in range(1, len(value['projects'])):
+                net_table.add_row(['','', value['projects'][i]])
     print(net_table)
 
 

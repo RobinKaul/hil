@@ -42,7 +42,6 @@ def node_show(node, jsonout):
         print(json_output)
         return
 
-    node_table.title = 'NODE TABLE'
     node_table.field_names = ['ATTRIBUTE', 'INFORMATION']
 
     if 'project' in raw_output:
@@ -78,7 +77,6 @@ def node_show(node, jsonout):
                 node_table.add_row([key, val.strip('""')])
 
     print(node_table)
-
 
 @node.command(name='bootdev', short_help="Set a node's boot device")
 @click.argument('node')
