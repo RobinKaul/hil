@@ -1,6 +1,5 @@
 """Commands related to networks are in this module"""
 import click
-import sys
 from hil.cli.client_setup import client
 from prettytable import PrettyTable
 import json
