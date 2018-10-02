@@ -78,6 +78,7 @@ def node_show(node, jsonout):
 
     print(node_table)
 
+
 @node.command(name='bootdev', short_help="Set a node's boot device")
 @click.argument('node')
 @click.argument('bootdev')

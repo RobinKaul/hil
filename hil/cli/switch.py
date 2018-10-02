@@ -34,7 +34,8 @@ def switch_show(switch, jsonout):
         if not raw_output['capabilities']:
             switch_table.add_row(['Capabilities', 'None'])
         else:
-            switch_table.add_row(['Capabilities', raw_output['capabilities'][0]])
+            switch_table.add_row(
+                ['Capabilities', raw_output['capabilities'][0]])
 
     if 'ports' in raw_output:
         if not raw_output['ports']:

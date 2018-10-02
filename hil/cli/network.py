@@ -66,7 +66,7 @@ def network_show(network, jsonout):
         for node, nic in raw_output['connected-nodes'].items():
             if firstElement == 0:
                 net_table.add_row(['Connected Nodes', node + "->" + nic[0]])
-                firstElement+= 1
+                firstElement += 1
             else:
                 net_table.add_row(['', node + "->" + nic[0]])
 
@@ -88,14 +88,17 @@ def network_list(jsonout):
         return
 
     net_table = PrettyTable()
-    net_table.field_names = ['NETWORK NAME', 'NETWORK ID', 'PROJECTS WITH ACCESS']
+    net_table.field_names = [
+        'NETWORK NAME',
+        'NETWORK ID',
+        'PROJECTS WITH ACCESS']
     for net_name, value in raw_output.items():
         if 'network_id' in value:
             net_id = value['network_id']
         if 'projects' in value:
             net_table.add_row([net_name, net_id, value['projects'][0]])
             for i in range(1, len(value['projects'])):
-                net_table.add_row(['','', value['projects'][i]])
+                net_table.add_row(['', '', value['projects'][i]])
     print(net_table)
 
 
