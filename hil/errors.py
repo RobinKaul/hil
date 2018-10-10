@@ -77,11 +77,15 @@ class AuthorizationError(APIError):
     status_code = 401
 
 
-class BlockedError(APIError):
-    """An exception indicating that the requested action cannot happen until
-    some other change.  For example, deletion is blocked until the components
-    are deleted, and possibly until the dirty flag is cleared as well.
-    """
+class AttachedResourceError(APIError):
+    """An exception indicating that there are resources still connected to
+    each other."""
+    status_code = 409  # Conflict
+
+
+class PendingActionError(APIError):
+    """An exception indicatiing that there are still processes taking place
+    on the resource."""
     status_code = 409  # Conflict
 
 

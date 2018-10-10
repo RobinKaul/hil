@@ -157,7 +157,7 @@ class TestProjectCreateDelete:
 
     def test_project_delete_hasnode(self):
         """Deleting a project which has nodes should fail."""
-        with pytest.raises(errors.BlockedError):
+        with pytest.raises(errors.AttachedResourceError):
             api.project_delete('manhattan')
 
     def test_project_delete_success_nodesdeleted(self):
@@ -172,7 +172,7 @@ class TestProjectCreateDelete:
         """Deleting a project that has networks should fail."""
         api.project_create('anvil-nextgen')
         network_create_simple('hammernet', 'anvil-nextgen')
-        with pytest.raises(errors.BlockedError):
+        with pytest.raises(errors.AttachedResourceError):
             api.project_delete('anvil-nextgen')
 
     def test_project_delete_success_networksdeleted(self):
@@ -186,7 +186,7 @@ class TestProjectCreateDelete:
         """Deleting a project that has headnodes should fail."""
         api.project_create('anvil-nextgen')
         api.headnode_create('hn-01', 'anvil-nextgen', 'base-headnode')
-        with pytest.raises(errors.BlockedError):
+        with pytest.raises(errors.AttachedResourceError):
             api.project_delete('anvil-nextgen')
 
     def test_duplicate_project_create(self):
@@ -229,12 +229,12 @@ class TestProjectAddDeleteNetwork:
             'runway_provider')
         deferred.apply_networking()
 
-        with pytest.raises(errors.BlockedError):
+        with pytest.raises(errors.AttachedResourceError):
             api.network_revoke_project_access('runway', 'runway_provider')
 
     def test_project_remove_network_owner(self):
         """Revoking access to a network's owner should fail."""
-        with pytest.raises(errors.BlockedError):
+        with pytest.raises(errors.AttachedResourceError):
             api.network_revoke_project_access('runway', 'runway_pxe')
 
 
@@ -315,7 +315,7 @@ class TestProjectConnectDetachNode:
         api.project_create('anvil-nextgen')
 
         api.project_connect_node('anvil-oldtimer', 'node-99')
-        with pytest.raises(errors.BlockedError):
+        with pytest.raises(errors.PendingActionError):
             api.project_connect_node('anvil-nextgen', 'node-99')
 
     def test_project_detach_node(self):
@@ -357,7 +357,7 @@ class TestProjectConnectDetachNode:
         network_create_simple('hammernet', 'anvil-nextgen')
         api.port_connect_nic('sw0', PORTS[2], 'node-99', 'eth0')
         api.node_connect_network('node-99', 'eth0', 'hammernet')
-        with pytest.raises(errors.BlockedError):
+        with pytest.raises(errors.AttachedResourceError):
             api.project_detach_node('anvil-nextgen', 'node-99')
 
     def test_project_detach_node_success_nic_not_on_network(self):
@@ -501,7 +501,7 @@ class TestNodeRegisterDelete:
         """node_delete should respond with an error if the node has nics."""
         new_node('node-99')
         api.node_register_nic('node-99', 'eth0', 'DE:AD:BE:EF:20:14')
-        with pytest.raises(errors.BlockedError):
+        with pytest.raises(errors.AttachedResourceError):
             api.node_delete('node-99')
 
     def test_node_delete_in_project(self):
@@ -509,7 +509,7 @@ class TestNodeRegisterDelete:
         new_node('node-99')
         api.project_create('skeleton')
         api.project_connect_node('skeleton', 'node-99')
-        with pytest.raises(errors.BlockedError):
+        with pytest.raises(errors.AttachedResourceError):
             api.node_delete('node-99')
 
 
@@ -611,7 +611,7 @@ class TestNodeRegisterDeleteNic:
         api.node_register_nic('node-99', 'nic1', 'DE:AD:BE:EF:20:18')
         api.project_create('anvil-nextgen')
         api.project_connect_node('anvil-nextgen', 'node-99')
-        with pytest.raises(errors.BlockedError):
+        with pytest.raises(errors.AttachedResourceError):
             api.node_delete_nic('node-99', 'nic1')
         api.project_detach_node('anvil-nextgen', 'node-99')
         api.node_delete_nic('node-99', 'nic1')
@@ -825,7 +825,7 @@ class TestNodeConnectDetachNetwork:
         api.node_connect_network('node-99', '99-eth0', 'hammernet')  # added
         deferred.apply_networking()  # added
 
-        with pytest.raises(errors.BlockedError):
+        with pytest.raises(errors.AttachedResourceError):
             api.node_connect_network('node-99', '99-eth0', 'hammernet')
 
     def test_node_connect_network_already_attached_differently(self,
@@ -845,7 +845,7 @@ class TestNodeConnectDetachNetwork:
         api.node_connect_network('node-99', '99-eth0', 'hammernet')  # added
         deferred.apply_networking()  # added
 
-        with pytest.raises(errors.BlockedError):
+        with pytest.raises(errors.AttachedResourceError):
             api.node_connect_network('node-99', '99-eth0', 'hammernet2')
 
     def test_node_detach_network_success(self, switchinit):
@@ -1431,7 +1431,7 @@ class TestNetworkCreateDelete:
         api.project_connect_node('anvil-nextgen', 'node-99')
         api.port_connect_nic('sw0', PORTS[2], 'node-99', 'eth0')
         api.node_connect_network('node-99', 'eth0', 'hammernet')
-        with pytest.raises(errors.BlockedError):
+        with pytest.raises(errors.AttachedResourceError):
             api.network_delete('hammernet')
 
     def test_network_delete_headnode_on_network(self):
@@ -1441,7 +1441,7 @@ class TestNetworkCreateDelete:
         api.headnode_create('hn-0', 'anvil-nextgen', 'base-headnode')
         api.headnode_create_hnic('hn-0', 'eth0')
         api.headnode_connect_network('hn-0', 'eth0', 'hammernet')
-        with pytest.raises(errors.BlockedError):
+        with pytest.raises(errors.AttachedResourceError):
             api.network_delete('hammernet')
 
 
@@ -1764,7 +1764,7 @@ class TestPortConnectDetachNic:
         api.project_create('anvil-nextgen')
         api.project_connect_node('anvil-nextgen', 'compute-01')
 
-        with pytest.raises(errors.BlockedError):
+        with pytest.raises(errors.PendingActionError):
             api.port_detach_nic('sw0', PORTS[2])
 
 
@@ -2469,7 +2469,7 @@ class TestShowNetworkingAction(unittest.TestCase):
         api.node_connect_network('node-99', '99-eth0', 'hammernet')
 
         # adding another action shouldn't work unless the last one is cleared
-        with pytest.raises(errors.BlockedError):
+        with pytest.raises(errors.PendingActionError):
             api.node_detach_network('node-99', '99-eth0', 'hammernet')
 
         # add another network operation on the same nic, the previous action

@@ -81,7 +81,7 @@ def test_enable_disable_obm(mock_node):
     api.node_enable_disable_obm(mock_node, enabled=True)
 
     # Obm is enabled; we shouldn't be able to detach the node:
-    with pytest.raises(errors.BlockedError):
+    with pytest.raises(errors.AttachedResourceError):
         api.project_detach_node('anvil-nextgen', mock_node)
 
     # ...so disable it first:
@@ -104,19 +104,19 @@ def test_power_operations(mock_node):
     i.e. power_off, power_cycle, set_bootdev, power_status
     """
     # Obm is disabled; these should all fail:
-    with pytest.raises(errors.BlockedError):
+    with pytest.raises(errors.OBMError):
         api.node_power_off(mock_node)
-    with pytest.raises(errors.BlockedError):
+    with pytest.raises(errors.OBMError):
         api.node_power_on(mock_node)
-    with pytest.raises(errors.BlockedError):
+    with pytest.raises(errors.OBMError):
         api.node_set_bootdev(mock_node, 'A')
-    with pytest.raises(errors.BlockedError):
+    with pytest.raises(errors.OBMError):
         api.node_power_cycle(mock_node, force=True)
-    with pytest.raises(errors.BlockedError):
+    with pytest.raises(errors.OBMError):
         api.node_power_cycle(mock_node, force=False)
-    with pytest.raises(errors.BlockedError):
+    with pytest.raises(errors.OBMError):
         api.node_power_status(mock_node)
-    with pytest.raises(errors.BlockedError):
+    with pytest.raises(errors.OBMError):
         api.show_console(mock_node)
 
     # Now let's enable it and try again.

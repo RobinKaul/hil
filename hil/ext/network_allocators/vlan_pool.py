@@ -5,7 +5,7 @@ import logging
 from hil.network_allocator import NetworkAllocator, set_network_allocator
 from hil.model import db
 from hil.config import cfg, core_schema, string_has_vlans
-from hil.errors import BlockedError
+from hil.errors import AllocationError
 
 from os.path import join, dirname
 from hil.migrations import paths
@@ -87,7 +87,7 @@ class VlanAllocator(NetworkAllocator):
         elif vlan.available:
             vlan.available = False
         else:
-            raise BlockedError("Network ID is not available."
+            raise AllocationError("Network ID is not available."
                                " Please choose a different ID.")
 
     def is_network_id_in_pool(self, net_id):

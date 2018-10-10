@@ -670,7 +670,7 @@ streaming will continue until the connection is broken.
 Only one client may be connected to a node's console in this fashion at
 a time; if a second client connects, the first will be disconnected.
 
-The node's obm must be enabled; a `BlockedError` will be raised
+The node's obm must be enabled; a `OBMError` will be raised
 otherwise.
 
 Authorization requirements:

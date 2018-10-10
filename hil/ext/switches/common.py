@@ -2,7 +2,7 @@
 from hil.config import cfg
 from hil import model
 from hil.model import db
-from hil.errors import BlockedError
+from hil.errors import AttachedResourceError
 import ast
 
 
@@ -65,12 +65,12 @@ def check_native_networks(nic, op_type, channel):
        query.filter(table.channel == 'vlan/native').count() == 0:
         # checks if it is trying to attach a trunked network, and then in
         # in the db see if nic does not have any networks attached natively
-        raise BlockedError("Please attach a native network first")
+        raise AttachedResourceError("Please attach a native network first")
     elif channel == 'vlan/native' and op_type == 'detach' and \
             query.filter(table.channel != 'vlan/native').count() > 0:
         # if it is detaching a network, then check in the database if there
         # are any trunked vlans.
-        raise BlockedError("Please remove all trunked Vlans"
+        raise AttachedResourceError("Please remove all trunked Vlans"
                            " before removing the native vlan")
 
 

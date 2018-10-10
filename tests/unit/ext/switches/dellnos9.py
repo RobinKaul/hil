@@ -7,7 +7,7 @@ from hil.model import db
 from hil.test_common import config_testsuite, config_merge, fresh_database, \
     fail_on_log_warnings, with_request_context, server_init, \
     network_create_simple
-from hil.errors import BlockedError
+from hil.errors import AttachedResourceError
 
 fail_on_log_warnings = pytest.fixture(autouse=True)(fail_on_log_warnings)
 fresh_database = pytest.fixture(fresh_database)
@@ -105,10 +105,10 @@ def test_ensure_legal_operations():
 
     # connecting a trunked network wihtout having a native should fail.
     # call the method directly and test the API too.
-    with pytest.raises(BlockedError):
+    with pytest.raises(AttachedResourceError):
         switch.ensure_legal_operation(nic, 'connect', 'vlan/1212')
 
-    with pytest.raises(BlockedError):
+    with pytest.raises(AttachedResourceError):
         api.node_connect_network('compute-01', 'eth0', 'hammernet', 'vlan/40')
 
     # doing these operations in the correct order, that is native network first
@@ -119,10 +119,10 @@ def test_ensure_legal_operations():
     mock_networking_action()
 
     # removing these networks in the wrong order should not work.
-    with pytest.raises(BlockedError):
+    with pytest.raises(AttachedResourceError):
         switch.ensure_legal_operation(nic, 'detach', 'vlan/native')
 
-    with pytest.raises(BlockedError):
+    with pytest.raises(AttachedResourceError):
         api.node_detach_network('compute-01', 'eth0', 'hammernet')
 
     # removing networks in the right order should work

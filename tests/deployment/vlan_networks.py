@@ -97,7 +97,7 @@ class TestNetworkVlan(NetworkTest):
             # proceeding.
             if 'nativeless-trunk-mode' not in switch.get_capabilities():
                 # connecting the first network as tagged should raise an error
-                with pytest.raises(errors.BlockedError):
+                with pytest.raises(errors.SwitchError):
                     api.node_connect_network(nodes[1].label,
                                              nodes[1].nics[0].label,
                                              'net-2',

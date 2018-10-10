@@ -58,9 +58,9 @@ def project_delete(project):
     get_auth_backend().require_admin()
     project = get_or_404(model.Project, project)
     if project.nodes:
-        raise errors.BlockedError("Project has nodes still")
+        raise errors.AttachedResourceError("Project has nodes still")
     if project.networks_created:
-        raise errors.BlockedError("Project still has networks")
+        raise errors.AttachedResourceError("Project still has networks")
     if project.networks_access:
         # FIXME: This is not the user's fault, and they cannot fix it.  The
         # only reason we need to error here is that, with how network access
@@ -71,9 +71,9 @@ def project_delete(project):
         # network accessible to ALL PROJECTS!  Once we use real ACLs, this
         # will not be an issue---instead, the network will be accessible by
         # NO projects.
-        raise errors.BlockedError("Project can still access networks")
+        raise errors.AttachedResourceError("Project can still access networks")
     if project.headnodes:
-        raise errors.BlockedError("Project still has a headnode")
+        raise errors.AttachedResourceError("Project still has a headnode")
     db.session.delete(project)
     db.session.commit()
 
@@ -86,13 +86,13 @@ def project_connect_node(project, node):
 
     If the node or project does not exist, a NotFoundError will be raised.
 
-    If node is already owned by a project, a BlockedError will be raised.
+    If node is already owned by a project, a AttachedResourceError will be raised.
     """
     project = get_or_404(model.Project, project)
     get_auth_backend().require_project_access(project)
     node = get_or_404(model.Node, node)
     if node.project is not None:
-        raise errors.BlockedError("Node is already owned by a project.")
+        raise errors.AttachedResourceError("Node is already owned by a project.")
     project.nodes.append(node)
     db.session.commit()
 
@@ -105,8 +105,9 @@ def project_detach_node(project, node):
 
     If the node or project does not exist, a NotFoundError will be raised.
 
-    If the node has network attachments or pending network actions, a
-    BlockedError will be raised.
+    If the node has network attachments or pending network actions, an
+    AttachedResourceError or a PendingActionError will be raised
+    respectively.
     """
     project = get_or_404(model.Project, project)
     get_auth_backend().require_project_access(project)
@@ -114,16 +115,16 @@ def project_detach_node(project, node):
     if node not in project.nodes:
         raise errors.NotFoundError("Node not in project")
     if node.obm_is_enabled():
-        raise errors.BlockedError("Node's obm is enabled.")
+        raise errors.OBMError("Node's obm is enabled.")
     num_attachments = model.NetworkAttachment.query \
         .filter(model.Nic.owner == node,
                 model.NetworkAttachment.nic_id == model.Nic.id).count()
     if num_attachments != 0:
-        raise errors.BlockedError("Node attached to a network")
+        raise errors.AttachedResourceError("Node attached to a network")
     for nic in node.nics:
         if nic.current_action is not None and \
            nic.current_action.status == 'PENDING':
-            raise errors.BlockedError("Node has pending network actions")
+            raise errors.PendingActionError("Node has pending network actions")
 
     project.nodes.remove(node)
     _maintain(project, node, node.label)
@@ -162,7 +163,7 @@ def network_revoke_project_access(project, network):
     """Remove access to <network> from <project>.
 
     If the project or network does not exist, a NotFoundError will be raised.
-    If the project is the owner of the network a BlockedError will be raised.
+    If the project is the owner of the network a AttachedResourceError will be raised.
     """
     auth_backend = get_auth_backend()
     network = get_or_404(model.Network, network)
@@ -186,7 +187,7 @@ def network_revoke_project_access(project, network):
             (network.label, project.label))
 
     if project is network.owner:
-        raise errors.BlockedError(
+        raise errors.AttachedResourceError(
             "Project %r is owner of network %r and "
             "its access cannot be removed" % (project.label,
                                               network.label))
@@ -194,12 +195,12 @@ def network_revoke_project_access(project, network):
     # TODO: Make this and the next loop more SQLAlchemy-friendly
     for attachment in network.attachments:
         if attachment.nic.owner.project.label == project.label:
-            raise errors.BlockedError(
+            raise errors.AttachedResourceError(
                 "Project still has node(s) attached to the network")
 
     for hnic in network.hnics:
         if hnic.owner.project.label == project.label:
-            raise errors.BlockedError(
+            raise errors.AttachedResourceError(
                 "Project still has headnode(s) attached to the network")
 
     network.access.remove(project)
@@ -319,11 +320,11 @@ def node_delete(node):
     get_auth_backend().require_admin()
     node = get_or_404(model.Node, node)
     if node.project:
-        raise errors.BlockedError(
+        raise errors.Error(
             "Node %r is part of project %r; remove from "
             "project before deleting" % (node.label, node.project.label))
     if node.nics != []:
-        raise errors.BlockedError(
+        raise errors.AttachedResourceError(
             "Node %r has nics; remove them before deleting %r." % (node.label,
                                                                    node.label))
     db.session.delete(node)
@@ -355,7 +356,7 @@ def node_delete_nic(node, nic):
     """Delete nic with given name from it's node.
 
     If the node or nic does not exist, a NotFoundError will be raised.
-    If the nic is on a node that belongs to a project then a BlockedError will
+    If the nic is on a node that belongs to a project then a Error will
     be raised.
     """
 
@@ -363,7 +364,7 @@ def node_delete_nic(node, nic):
     node = get_or_404(model.Node, node)
     nic = get_child_or_404(node, model.Nic, nic)
     if node.project:
-        raise errors.BlockedError("Nic is on a node that belongs to a project."
+        raise errors.AttachedResourceError("Nic is on a node that belongs to a project."
                                   " Remove node from project and try again")
     if nic.current_action:
         db.session.delete(nic.current_action)
@@ -385,8 +386,8 @@ def node_connect_network(node, nic, network, channel=None):
     Raises ProjectMismatchError if the node is not in a project, or if the
     project does not have access rights to the given network.
 
-    Raises BlockedError if there is a pending network action, or if the network
-    is already attached to the nic, or if the channel is in use.
+    Raises PendingActionError if there is a pending network action, or AttachedResourceError 
+    if the network is already attached to the nic, or if the channel is in use.
 
     Raises BadArgumentError if the channel is invalid for the network.
     """
@@ -424,14 +425,14 @@ def node_connect_network(node, nic, network, channel=None):
             "Project does not have access to given network.")
 
     if _have_attachment(nic, model.NetworkAttachment.network == network):
-        raise errors.BlockedError(
+        raise errors.AttachedResourceError(
             "The network is already attached to the nic.")
 
     if channel is None:
         channel = allocator.get_default_channel()
 
     if _have_attachment(nic, model.NetworkAttachment.channel == channel):
-        raise errors.BlockedError("The channel is already in use on the nic.")
+        raise errors.PendingActionError("The channel is already in use on the nic.")
 
     if not allocator.is_legal_channel_for(channel, network.network_id):
         raise errors.BadArgumentError(
@@ -459,7 +460,7 @@ def node_detach_network(node, nic, network):
 
     Raises ProjectMismatchError if the node is not in a project.
 
-    Raises BlockedError if there is already a pending network action.
+    Raises PendingActionError if there is already a pending network action.
 
     Raises BadArgumentError if the network is not attached to the nic.
     """
@@ -866,17 +867,18 @@ def network_delete(network):
     If the network does not exist, a NotFoundError will be raised.
 
     If the network is connected to nodes or headnodes, or there are pending
-    network actions involving it, a BlockedError will be raised.
+    network actions involving it, an AttachedResourceError or a
+    PendingActionError will be raised respectively.
     """
     network = get_or_404(model.Network, network)
     get_auth_backend().require_project_access(network.owner)
 
     if len(network.attachments) != 0:
-        raise errors.BlockedError("Network still connected to nodes")
+        raise errors.AttachedResourceError("Network still connected to nodes")
     if network.hnics:
-        raise errors.BlockedError("Network still connected to headnodes")
+        raise errors.AttachedResourceError("Network still connected to headnodes")
     if len(network.scheduled_nics) != 0:
-        raise errors.BlockedError("There are pending actions on this network")
+        raise errors.PendingActionError("There are pending actions on this network")
     if network.allocated:
         get_network_allocator().free_network_id(network.network_id)
 
@@ -968,7 +970,7 @@ def switch_delete(switch):
     switch = get_or_404(model.Switch, switch)
 
     if switch.ports != []:
-        raise errors.BlockedError(
+        raise errors.AttachedResourceError(
             "Switch %r has ports; delete them first." % switch.label)
 
     db.session.delete(switch)
@@ -1007,7 +1009,7 @@ def switch_delete_port(switch, port):
     switch = get_or_404(model.Switch, switch)
     port = get_child_or_404(switch, model.Port, port)
     if port.nic is not None:
-        raise errors.BlockedError(
+        raise errors.AttachedResourceError(
             "Port %r is attached to a nic; please detach "
             "it first." % port.label)
 
@@ -1114,7 +1116,7 @@ def port_detach_nic(switch, port):
 
     If the port is not connected to anything, a NotFoundError will be raised.
 
-    If the port is attached to a node which is not free, a BlockedError
+    If the port is attached to a node which is not free, an AttachedResourceError
     will be raised.
     """
     get_auth_backend().require_admin()
@@ -1124,7 +1126,7 @@ def port_detach_nic(switch, port):
     if port.nic is None:
         raise errors.NotFoundError(port.label + " not attached")
     if port.nic.owner.project is not None:
-        raise errors.BlockedError("The port is attached to a node which is "
+        raise errors.AttachedResourceError("The port is attached to a node which is "
                                   "not free")
 
     port.nic = None
@@ -1380,7 +1382,7 @@ def get_or_404(cls, name):
 
 def _obmd_redirect(node, path):
     if not node.obm_is_enabled():
-        raise errors.BlockedError("OBM is not enabled")
+        raise errors.OBMError("OBM is not enabled")
     return flask.redirect(
         node.obmd_uri + path + '?token=' + node.obmd_node_token,
         # 307 is important, since it requires that the client not change
@@ -1485,7 +1487,7 @@ def check_pending_action(nic):
     Otherwise deletes the completed action"""
     if nic.current_action:
         if nic.current_action.status == 'PENDING':
-            raise errors.BlockedError(
+            raise errors.PendingActionError(
                 "A networking operation is already active on the nic.")
         else:
             db.session.delete(nic.current_action)

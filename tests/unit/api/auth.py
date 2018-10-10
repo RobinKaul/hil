@@ -14,7 +14,7 @@ import json
 from hil import api, config, model, deferred
 from hil.auth import get_auth_backend
 from hil.errors import AuthorizationError, BadArgumentError, \
-    ProjectMismatchError, BlockedError
+    ProjectMismatchError, AttachedResourceError
 from hil.test_common import config_testsuite, config_merge, fresh_database, \
     with_request_context, additional_db, fail_on_log_warnings, server_init, \
     spoof_enable_obm
@@ -586,7 +586,7 @@ auth_call_params += [
     # Project tries to connect someone else's node to itself. The basic cases
     # of connecting a free node are covered by project_calls, below.
     dict(fn=api.project_connect_node,
-         error=BlockedError,
+         error=AttachedResourceError,
          admin=False,
          project='runway',
          args=['runway', 'manhattan_node_0']),

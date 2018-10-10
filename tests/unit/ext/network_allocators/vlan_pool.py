@@ -99,9 +99,9 @@ class TestAdminCreatedNetworks():
         assert network.allocated is True
 
         # creating a network with the same network id should raise an error
-        with pytest.raises(errors.BlockedError):
+        with pytest.raises(errors.DuplicateError):
             api.network_create('redbone', 'admin', '', 103)
-        with pytest.raises(errors.BlockedError):
+        with pytest.raises(errors.DuplicateError):
             api.network_create('starfish', 'admin', '', net_id)
 
         # free the network ids by deleting the networks
