@@ -90,7 +90,6 @@ setup(name='hil',
                         'lxml>=3.6.0,<4.0',
                         'click>=6.0,<7.0'
                         'prettytable>=0.7.2',
-                        'PTable>=0.9.2',
                         ],
       extras_require={
           'tests': [
